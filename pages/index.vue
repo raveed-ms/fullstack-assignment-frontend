@@ -1,71 +1,89 @@
 <template>
-  <PageLayout>
-    <v-row justify="center" align="center" class="fill-height">
-      <v-col cols="12" md="8" lg="6" class="text-center">
-        <v-card class="pa-8">
-          <v-card-title class="text-h3 mb-4">
-            <v-icon size="64" color="primary" class="mb-4">mdi-account-group</v-icon>
-            <br>
-            User Management System
-          </v-card-title>
-          
-          <v-card-text class="text-h6 mb-6">
-            A comprehensive user management system with role-based access control
-          </v-card-text>
-
-          <ClientOnly>
-            <template v-if="isAuthenticated">
-              <v-btn
-                color="primary"
-                size="large"
-                class="mr-4"
-                @click="navigateTo('/dashboard')"
-              >
-                <v-icon class="mr-2">mdi-view-dashboard</v-icon>
-                Go to Dashboard
-              </v-btn>
-              
-              <v-btn
-                variant="outlined"
-                size="large"
-                @click="navigateTo('/profile')"
-              >
-                <v-icon class="mr-2">mdi-account</v-icon>
-                View Profile
-              </v-btn>
-            </template>
-            
-            <template v-else>
-              <v-btn
-                color="primary"
-                size="large"
-                class="mr-4"
-                @click="navigateTo('/login')"
-              >
-                <v-icon class="mr-2">mdi-login</v-icon>
-                Login
-              </v-btn>
-              
-              <v-btn
-                variant="outlined"
-                size="large"
-                @click="navigateTo('/register')"
-              >
-                <v-icon class="mr-2">mdi-account-plus</v-icon>
-                Register
-              </v-btn>
-            </template>
-          </ClientOnly>
-        </v-card>
-      </v-col>
-    </v-row>
-  </PageLayout>
+  <div class="home-wrapper">
+    <ClientOnly>
+      <template #default>
+        <div v-if="isLoading" class="loading-container">
+          <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
+          <p class="mt-4">Checking authentication status...</p>
+        </div>
+      </template>
+      
+      <template #fallback>
+        <div class="home-fallback">
+          <h1>Welcome to the Application</h1>
+          <p>Loading...</p>
+        </div>
+      </template>
+    </ClientOnly>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { useAuth } from '~/composables/useAuth'
+import { useUserStore } from '~/stores/user'
+import { useRouter } from 'vue-router'
 
-definePageMeta({ title: 'Home' })
+const userStore = useUserStore()
+const router = useRouter()
+const isLoading = ref(true)
 
-const { isAuthenticated } = useAuth()
-</script> 
+// Check auth status on page load and redirect accordingly
+onMounted(async () => {
+  isLoading.value = true
+  
+  try {
+    // Check if user is authenticated (this will restore from localStorage if token exists)
+    const isAuthenticated = await userStore.checkAuth()
+    
+    // Redirect based on authentication status
+    if (isAuthenticated) {
+      console.log('User is authenticated, redirecting to dashboard')
+      router.replace('/dashboard')
+    } else {
+      console.log('User is not authenticated, redirecting to login')
+      router.replace('/login')
+    }
+  } catch (error) {
+    console.error('Error checking authentication:', error)
+    // If there's an error, default to login page
+    router.replace('/login')
+  } finally {
+    isLoading.value = false
+  }
+})
+</script>
+
+<style scoped>
+.home-wrapper {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-fallback {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+  text-align: center;
+}
+
+.home-fallback h1 {
+  margin-bottom: 1.5rem;
+  color: #4a6fa5;
+}
+
+.loading-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+  text-align: center;
+  font-size: 1.2rem;
+  color: #4a6fa5;
+}
+</style>

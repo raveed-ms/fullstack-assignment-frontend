@@ -1,14 +1,9 @@
 <template>
   <NuxtLayout>
-    <v-app>
-      <AppNavigation />
-      <v-main>
-        <NuxtPage />
-      </v-main>
-    </v-app>
+    <NuxtPage />
   </NuxtLayout>
 </template>
 
 <script setup>
-// This is the main app layout that wraps all pages with Vuetify
+// Using NuxtLayout instead of direct v-app to avoid hydration issues
 </script>
