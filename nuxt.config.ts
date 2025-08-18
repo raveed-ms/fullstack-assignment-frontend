@@ -12,7 +12,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.NUXT_API_BASE_URL || 'http://localhost:3031'
+      apiBaseUrl: process.env.NUXT_API_BASE_URL || 'https://fullstack-assignment-backend-fqeo.onrender.com'
     }
   },
   css: [

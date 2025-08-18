@@ -66,13 +66,13 @@
 
                 
                 <!-- Added Fields -->
-                <div v-if="parsedChangeSummary?.added && Object.keys(parsedChangeSummary.added).length > 0" class="mb-4">
+                <div v-if="parsedChangeSummary && Object.keys(parsedChangeSummary.added || {}).length > 0" class="mb-4">
                   <h4 class="text-subtitle-1 mb-3">
                     <v-icon start size="small" class="mr-2">mdi-plus-circle</v-icon>
-                    Added Fields ({{ Object.keys(changelog.changeSummary.added).length }})
+                    Added Fields ({{ Object.keys(parsedChangeSummary.added || {}).length }})
                   </h4>
                   <div class="changes-grid">
-                    <div v-for="(value, field) in parsedChangeSummary.added" :key="`added-${field}`" class="change-item">
+                    <div v-for="(value, field) in (parsedChangeSummary.added || {})" :key="`added-${field}`" class="change-item">
                       <div class="change-field-name">{{ field }}</div>
                       <div class="change-field-value">{{ formatFieldValue(value) }}</div>
                     </div>
@@ -80,13 +80,13 @@
                 </div>
 
                 <!-- Modified Fields -->
-                <div v-if="parsedChangeSummary?.modified && Object.keys(parsedChangeSummary.modified).length > 0" class="mb-4">
+                <div v-if="parsedChangeSummary && Object.keys(parsedChangeSummary.modified || {}).length > 0" class="mb-4">
                   <h4 class="text-subtitle-1 mb-3">
                     <v-icon start size="small" class="mr-2">mdi-pencil</v-icon>
-                    Modified Fields ({{ Object.keys(parsedChangeSummary.modified).length }})
+                    Modified Fields ({{ Object.keys(parsedChangeSummary.modified || {}).length }})
                   </h4>
                   <div class="changes-grid">
-                    <div v-for="(change, field) in parsedChangeSummary.modified" :key="`modified-${field}`" class="change-item">
+                    <div v-for="(change, field) in (parsedChangeSummary.modified || {})" :key="`modified-${field}`" class="change-item">
                       <div class="change-field-name">{{ field }}</div>
                       <div class="change-field-change">
                         <span class="old-value">{{ formatFieldValue(change.from) }}</span>
@@ -100,13 +100,13 @@
                 </div>
 
                 <!-- Removed Fields -->
-                <div v-if="parsedChangeSummary?.removed && Object.keys(parsedChangeSummary.removed).length > 0" class="mb-4">
+                <div v-if="parsedChangeSummary && Object.keys(parsedChangeSummary.removed || {}).length > 0" class="mb-4">
                   <h4 class="text-subtitle-1 mb-3">
                     <v-icon start size="small" class="mr-2">mdi-minus-circle</v-icon>
-                    Removed Fields ({{ Object.keys(parsedChangeSummary.removed).length }})
+                    Removed Fields ({{ Object.keys(parsedChangeSummary.removed || {}).length }})
                   </h4>
                   <div class="changes-grid">
-                    <div v-for="(value, field) in parsedChangeSummary.removed" :key="`removed-${field}`" class="change-item">
+                    <div v-for="(value, field) in (parsedChangeSummary.removed || {})" :key="`removed-${field}`" class="change-item">
                       <div class="change-field-name">{{ field }}</div>
                       <div class="change-field-value">{{ formatFieldValue(value) }}</div>
                     </div>
@@ -114,9 +114,9 @@
                 </div>
 
                 <!-- No Changes -->
-                <div v-if="!parsedChangeSummary?.added || Object.keys(parsedChangeSummary.added).length === 0">
-                  <div v-if="!parsedChangeSummary?.modified || Object.keys(parsedChangeSummary.modified).length === 0">
-                    <div v-if="!parsedChangeSummary?.removed || Object.keys(parsedChangeSummary.removed).length === 0">
+                <div v-if="!parsedChangeSummary || Object.keys(parsedChangeSummary.added || {}).length === 0">
+                  <div v-if="Object.keys(parsedChangeSummary?.modified || {}).length === 0">
+                    <div v-if="Object.keys(parsedChangeSummary?.removed || {}).length === 0">
                       <v-alert type="info" variant="tonal" class="mt-3">
                         No changes detected in this entry.
                       </v-alert>
@@ -245,20 +245,28 @@ const isLoadingModifier = ref(false);
 const modifierDetails = ref<any>(null);
 const modifierError = ref<string | null>(null);
 
-// Parse changeSummary if it's a string
+// Parse changeSummary safely and normalize to consistent shape
 const parsedChangeSummary = computed(() => {
-  if (!props.changelog?.changeSummary) return null;
-  
-  if (typeof props.changelog.changeSummary === 'string') {
+  const normalize = (obj: any) => ({
+    added: (obj && typeof obj.added === 'object' && obj.added) ? obj.added : {},
+    modified: (obj && typeof obj.modified === 'object' && obj.modified) ? obj.modified : {},
+    removed: (obj && typeof obj.removed === 'object' && obj.removed) ? obj.removed : {}
+  });
+
+  const raw = props.changelog?.changeSummary as any;
+  if (!raw) return normalize({});
+
+  if (typeof raw === 'string') {
     try {
-      return JSON.parse(props.changelog.changeSummary);
+      const parsed = JSON.parse(raw);
+      return normalize(parsed);
     } catch (error) {
       console.error('Error parsing changeSummary:', error);
-      return null;
+      return normalize({});
     }
   }
-  
-  return props.changelog.changeSummary;
+
+  return normalize(raw);
 });
 
 const dialogValue = computed({

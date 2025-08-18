@@ -43,7 +43,7 @@
                 type="info"
                 variant="tonal"
                 class="mb-4"
-                :text="`Found ${filteredPlayers.length} eligible players for this persona`"
+                :text="`Found ${totalPlayers} eligible players for this persona (showing ${eligiblePlayers.length} on current page)`"
               ></v-alert>
               
               <div class="players-list">
@@ -99,7 +99,7 @@
               <v-divider class="mb-4"></v-divider>
               <div class="d-flex align-center justify-space-between">
                 <div class="text-body-2 text-grey">
-                  Showing {{ startIndex + 1 }}-{{ endIndex }} of {{ filteredPlayers.length }} players
+                  Showing page {{ currentPage }} of {{ totalPages }} ({{ eligiblePlayers.length }} players on this page)
                 </div>
                 <div class="d-flex align-center gap-2">
                   <v-btn
@@ -192,12 +192,12 @@ const hasSearched = ref(false);
 const searchQuery = ref('');
 const filteredPlayers = ref<Player[]>([]);
 
-// Pagination state
+// Server-side pagination state
 const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const itemsPerPage = ref(100); // Match the API limit
+const totalPlayers = ref(0);
 const totalPages = ref(1);
-const startIndex = ref(0);
-const endIndex = ref(0);
+const isLoadingMore = ref(false);
 
 const dialogValue = computed({
   get: () => props.modelValue,
@@ -205,7 +205,7 @@ const dialogValue = computed({
 });
 
 const paginatedPlayers = computed(() => {
-  return filteredPlayers.value.slice(startIndex.value, endIndex.value);
+  return eligiblePlayers.value;
 });
 
 const closeModal = () => {
@@ -216,6 +216,7 @@ const closeModal = () => {
   hasSearched.value = false;
   searchQuery.value = '';
   currentPage.value = 1;
+  totalPlayers.value = 0;
   updatePagination();
 };
 
@@ -229,32 +230,29 @@ const filterPlayers = () => {
       (player.username && player.username.toLowerCase().includes(query))
     );
   }
-  currentPage.value = 1;
-  updatePagination();
+  // Note: Server-side pagination doesn't change when filtering locally
+  // The filter only affects the current page's displayed players
 };
 
 
 
 const updatePagination = () => {
-  totalPages.value = Math.ceil(filteredPlayers.value.length / itemsPerPage.value);
+  totalPages.value = Math.ceil(totalPlayers.value / itemsPerPage.value);
   currentPage.value = Math.min(currentPage.value, totalPages.value);
   if (currentPage.value < 1) currentPage.value = 1;
-  
-  startIndex.value = (currentPage.value - 1) * itemsPerPage.value;
-  endIndex.value = Math.min(startIndex.value + itemsPerPage.value, filteredPlayers.value.length);
 };
 
-const previousPage = () => {
+const previousPage = async () => {
   if (currentPage.value > 1) {
     currentPage.value--;
-    updatePagination();
+    await loadEligiblePlayers();
   }
 };
 
-const nextPage = () => {
+const nextPage = async () => {
   if (currentPage.value < totalPages.value) {
     currentPage.value++;
-    updatePagination();
+    await loadEligiblePlayers();
   }
 };
 
@@ -269,7 +267,8 @@ const loadEligiblePlayers = async () => {
   try {
     // Build query based on persona rules
     const query: PlayerQuery = {
-      limit: 100, // Limit to 100 players for performance
+      limit: itemsPerPage.value, // Use pagination limit
+      skip: (currentPage.value - 1) * itemsPerPage.value, // Calculate skip based on current page
       sort: { field: 'careerLevel', order: 'desc' } // Sort by level descending
     };
     
@@ -319,15 +318,18 @@ const loadEligiblePlayers = async () => {
     
     console.log('Loading eligible players with query:', query);
     
+    // Fetch players with server-side pagination
     const response = await playersApi.getPlayers(query);
     if (response.success && response.data) {
       eligiblePlayers.value = response.data.players;
       filteredPlayers.value = eligiblePlayers.value; // Set filtered players initially
-      console.log(`Found ${eligiblePlayers.value.length} eligible players`);
+      totalPlayers.value = response.data.pagination?.total || eligiblePlayers.value.length;
+      console.log(`Found ${eligiblePlayers.value.length} players on page ${currentPage.value} of ${totalPages.value}`);
       updatePagination(); // Update pagination after loading players
     } else {
       eligiblePlayers.value = [];
       filteredPlayers.value = [];
+      totalPlayers.value = 0;
       updatePagination();
       console.error('Failed to load eligible players:', response.error);
     }
@@ -335,6 +337,7 @@ const loadEligiblePlayers = async () => {
     console.error('Error loading eligible players:', error);
     eligiblePlayers.value = [];
     filteredPlayers.value = [];
+    totalPlayers.value = 0;
     updatePagination();
   } finally {
     isLoadingPlayers.value = false;

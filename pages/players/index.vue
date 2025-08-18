@@ -366,6 +366,7 @@
             :headers="tableHeaders"
             :items="players"
             :loading="isLoading"
+            :items-per-page="itemsPerPage"
             class="players-table"
             hover
             hide-default-footer
