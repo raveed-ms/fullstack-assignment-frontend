@@ -37,32 +37,22 @@
       <!-- Events Navigation -->
       <v-list-item to="/events" prepend-icon="mdi-calendar" title="Events" class="sidebar-item"></v-list-item>
       
-      <!-- Seasons Navigation with Dropdown -->
-      <v-list-group value="seasons">
-        <template v-slot:activator="{ props }">
-          <v-list-item
-            v-bind="props"
-            prepend-icon="mdi-calendar-month"
-            title="Seasons"
-            class="sidebar-item"
-          ></v-list-item>
-        </template>
-        
-        <v-list-item 
-          to="/seasons" 
-          prepend-icon="mdi-calendar-month" 
-          title="All Seasons" 
-          class="sidebar-sub-item"
-        ></v-list-item>
-        
-        <v-list-item 
-          v-if="userStore.isAdmin"
-          to="/seasons/changelogs" 
-          prepend-icon="mdi-history" 
-          title="Change Logs" 
-          class="sidebar-sub-item"
-        ></v-list-item>
-      </v-list-group>
+      <!-- Seasons Navigation -->
+      <v-list-item 
+        to="/seasons" 
+        prepend-icon="mdi-calendar-month" 
+        title="Seasons" 
+        class="sidebar-item"
+      ></v-list-item>
+      
+      <!-- Seasons Change Logs (top-level) -->
+      <v-list-item 
+        v-if="userStore.isAdmin"
+        to="/seasons/changelogs" 
+        prepend-icon="mdi-history" 
+        title="Changelogs" 
+        class="sidebar-item"
+      ></v-list-item>
       
       <!-- Players Navigation with Dropdown -->
       <v-list-group value="players">
@@ -90,6 +80,14 @@
           class="sidebar-sub-item"
         ></v-list-item>
       </v-list-group>
+
+      <!-- Buckets Navigation -->
+      <v-list-item 
+        to="/buckets" 
+        prepend-icon="mdi-bucket" 
+        title="Buckets" 
+        class="sidebar-item"
+      ></v-list-item>
       
       <!-- Users Navigation -->
       <v-list-item to="/users" prepend-icon="mdi-account-multiple-outline" title="Users" class="sidebar-item"></v-list-item>
