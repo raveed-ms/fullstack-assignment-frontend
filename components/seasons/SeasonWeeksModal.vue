@@ -85,6 +85,77 @@
                     Add Persona
                   </v-btn>
                 </div>
+
+                <!-- Persona Search -->
+                <div class="mb-4 search-container">
+                  <v-text-field
+                    v-model="personaSearchQueries[week.id]"
+                    variant="outlined"
+                    density="compact"
+                    placeholder="Search personas by name..."
+                    prepend-inner-icon="mdi-magnify"
+                    :append-inner-icon="isSearchingPersonas[week.id] ? 'mdi-loading mdi-spin' : undefined"
+                    clearable
+                    hide-details
+                    class="persona-search-field"
+                    :disabled="isSearchingPersonas[week.id]"
+                  ></v-text-field>
+                  
+                  <!-- Persona Search Results Dropdown -->
+                  <div v-if="personaSearchQueries[week.id] && personaSearchQueries[week.id].trim() && personaSearchResults[week.id] && personaSearchResults[week.id].length > 0" class="search-results-overlay">
+                    <v-card class="search-results-dropdown" elevation="4">
+                      <v-card-title class="text-subtitle-2 pa-3 pb-2">
+                        Found {{ personaSearchResults[week.id].length }} matching personas from other weeks/seasons:
+                      </v-card-title>
+                      <v-card-text class="pa-3 pt-0">
+                        <v-list density="compact">
+                          <v-list-item
+                            v-for="persona in personaSearchResults[week.id]"
+                            :key="`${persona.seasonId}-${persona.weekId}-${persona.bucketId}`"
+                            class="mb-2"
+                            @click="importPersonaToWeek(week.id, persona)"
+                          >
+                            <template v-slot:prepend>
+                              <v-icon color="primary" size="small">mdi-account-group</v-icon>
+                            </template>
+                            
+                            <v-list-item-title class="text-body-2 font-weight-medium">
+                              {{ persona.name }}
+                            </v-list-item-title>
+                            
+                            <v-list-item-subtitle class="text-caption">
+                              {{ persona.description || 'No description' }} • {{ persona.seasonInfo }} • {{ persona.weekNumber }}
+                            </v-list-item-subtitle>
+                            
+                            <template v-slot:append>
+                              <v-btn
+                                color="primary"
+                                variant="text"
+                                size="x-small"
+                                @click.stop="importPersonaToWeek(week.id, persona)"
+                              >
+                                <v-icon size="small">mdi-content-copy</v-icon>
+                                Import
+                              </v-btn>
+                            </template>
+                          </v-list-item>
+                        </v-list>
+                      </v-card-text>
+                    </v-card>
+                  </div>
+                  
+                  <!-- No Search Results Message -->
+                  <div v-else-if="personaSearchQueries[week.id] && personaSearchQueries[week.id].trim() && !isSearchingPersonas[week.id] && (!personaSearchResults[week.id] || personaSearchResults[week.id].length === 0)" class="mt-2">
+                    <v-alert
+                      type="info"
+                      variant="tonal"
+                      density="compact"
+                      class="text-body-2"
+                    >
+                      No personas found matching "{{ personaSearchQueries[week.id] }}"
+                    </v-alert>
+                  </div>
+                </div>
                 
                 <!-- Loading indicator for buckets -->
                 <div v-if="isLoadingBuckets" class="text-center py-4">
@@ -93,10 +164,12 @@
                 </div>
 
                 <!-- Persona Grid -->
-                <div v-if="!isLoadingBuckets && (!personaRows[week.id] || personaRows[week.id].length === 0)" class="text-center py-6">
+                <div v-if="!isLoadingBuckets && (!filteredPersonas[week.id] || filteredPersonas[week.id].length === 0)" class="text-center py-6">
                   <v-icon size="48" color="grey-lighten-1" class="mb-3">mdi-account-group-outline</v-icon>
-                  <div class="text-h6 text-grey mb-2">No Personas Yet</div>
-                  <div class="text-body-2 text-grey mb-4">This week doesn't have any personas configured yet.</div>
+                  <div class="text-h6 text-grey mb-2">No Personas Found</div>
+                  <div class="text-body-2 text-grey mb-4">
+                    {{ personaRows[week.id] && personaRows[week.id].length > 0 ? 'No personas match your search criteria.' : 'This week doesn\'t have any personas configured yet.' }}
+                  </div>
                   <v-btn
                     color="primary"
                     variant="outlined"
@@ -105,21 +178,21 @@
                     :disabled="isLoading"
                   >
                     <v-icon start size="small">mdi-plus</v-icon>
-                    Add First Persona
+                    {{ personaRows[week.id] && personaRows[week.id].length > 0 ? 'Add Another Persona' : 'Add First Persona' }}
                   </v-btn>
                 </div>
                 
                 <v-data-table
                   v-else
                   :headers="personaHeaders"
-                  :items="personaRows[week.id] || []"
+                  :items="filteredPersonas[week.id] || []"
                   :loading="isLoading"
                   class="persona-grid"
-                  density="compact"
+                  density="comfortable"
                 >
 
                   <template v-slot:item="{ item, index }">
-                    <tr>
+                    <tr class="persona-row">
                       <!-- Persona Name -->
                       <td>
                         <v-text-field
@@ -360,14 +433,14 @@
           <div class="mt-2">Searching events...</div>
         </div>
         
-        <div v-else-if="searchResults.length === 0" class="text-center py-4 text-grey">
+        <div v-else-if="eventSearchResults.length === 0" class="text-center py-4 text-grey">
           No events found
         </div>
         
         <div v-else class="event-list">
           <v-list>
             <v-list-item
-              v-for="event in searchResults"
+              v-for="event in eventSearchResults"
               :key="event.id"
               @click="selectEvent(event)"
               class="mb-2"
@@ -453,13 +526,22 @@ const activeTab = ref<number | null>(null);
 // Event selector state
 const eventSelectorOpen = ref(false);
 const eventSearchQuery = ref('');
-const searchResults = ref<any[]>([]);
+const eventSearchResults = ref<any[]>([]);
 const searchingEvents = ref(false);
 const selectedEventId = ref<number | null>(null);
 const currentPersonaContext = ref<{ weekId: number; index: number } | null>(null);
 
+// Persona search results (separate from event search)
+const personaSearchResults = ref<Record<number, any[]>>({});
+
 // Persona management state
 const personaRows = ref<Record<number, any[]>>({});
+const personaSearchQueries = ref<Record<number, string>>({});
+const filteredPersonas = ref<Record<number, any[]>>({});
+const isSearchingPersonas = ref<Record<number, boolean>>({});
+
+// Debounce timers for search
+const searchDebounceTimers = ref<Record<number, NodeJS.Timeout>>({});
 
 // Persona table headers
 const personaHeaders = [
@@ -482,6 +564,142 @@ const rules = {
   nameLength: (value: string) => (value.length >= 2 && value.length <= 50) || 'Name must be 2-50 characters'
 };
 
+// Search personas by name using API (non-destructive for local, unsaved rows)
+const searchPersonasByName = async (weekId: number, searchQuery: string) => {
+  if (!props.season) return;
+  
+  try {
+    isSearchingPersonas.value[weekId] = true;
+    
+    if (!searchQuery.trim()) {
+      // No search: show local rows only (do NOT reload from API to avoid losing unsaved personas)
+      filteredPersonas.value[weekId] = personaRows.value[weekId] || [];
+      personaSearchResults.value[weekId] = [];
+    } else {
+      // Search by name across all buckets in the system
+      const response = await bucketsApi.getBuckets({
+        searchName: searchQuery.trim(),
+        limit: 100 // Reasonable limit for search results
+      });
+      
+      console.log(`Search results for "${searchQuery}":`, response.data);
+      
+      if (response.success && response.data) {
+        // Convert search results to persona format for display
+        const personas = await Promise.all(response.data.map(async (bucket) => {
+          let eventName = '';
+          if (bucket.eventId) {
+            try {
+              const eventResponse = await eventsApi.getEvent(bucket.eventId);
+              if (eventResponse.success && eventResponse.data) {
+                eventName = eventResponse.data.name || `Event #${bucket.eventId}`;
+              } else {
+                eventName = `Event #${bucket.eventId}`;
+              }
+            } catch (error) {
+              console.warn(`Failed to fetch event ${bucket.eventId}:`, error);
+              eventName = `Event #${bucket.eventId}`;
+            }
+          }
+          
+          return {
+            bucketId: bucket.id,
+            name: bucket.name || '',
+            description: bucket.description || '',
+            personaRules: {
+              level: {
+                min: bucket.personaRules?.level?.min,
+                max: bucket.personaRules?.level?.max
+              },
+              mmr: {
+                min: bucket.personaRules?.mmr?.min,
+                max: bucket.personaRules?.mmr?.max
+              },
+              spending: {
+                min: bucket.personaRules?.spending?.min,
+                max: bucket.personaRules?.spending?.max
+              }
+            },
+            priority: bucket.priority || 1,
+            eventId: bucket.eventId,
+            eventName: eventName,
+            // Add week and season info for context
+            weekId: bucket.weekId,
+            seasonId: bucket.seasonId,
+            weekNumber: `Week ${bucket.weekId}`,
+            seasonInfo: `Season ${bucket.seasonId}`
+          };
+        }));
+        
+        console.log(`Converted personas from search:`, personas);
+        
+        // Store search results separately, don't replace current week's personas
+        personaSearchResults.value[weekId] = personas;
+      }
+    }
+  } catch (error: any) {
+    console.error(`Error searching personas for week ${weekId}:`, error);
+    const errorMessage = handleBucketFetchError(error);
+    showError('Failed to search personas', errorMessage);
+    
+    // Fallback to showing all personas for this week
+    filteredPersonas.value[weekId] = personaRows.value[weekId] || [];
+  } finally {
+    isSearchingPersonas.value[weekId] = false;
+  }
+};
+
+// Debounced search function
+const debouncedSearch = (weekId: number, searchQuery: string) => {
+  // Clear existing timer
+  if (searchDebounceTimers.value[weekId]) {
+    clearTimeout(searchDebounceTimers.value[weekId]);
+  }
+  
+  // Set new timer
+  searchDebounceTimers.value[weekId] = setTimeout(() => {
+    searchPersonasByName(weekId, searchQuery);
+  }, 300); // 300ms debounce
+};
+
+// Watch for search query changes to filter personas (avoid API call on empty query)
+watch(personaSearchQueries, (newQueries) => {
+  Object.keys(newQueries).forEach(weekId => {
+    const weekIdNum = parseInt(weekId);
+    const searchQuery = newQueries[weekIdNum] || '';
+    if (!searchQuery.trim()) {
+      personaSearchResults.value[weekIdNum] = [];
+      filteredPersonas.value[weekIdNum] = personaRows.value[weekIdNum] || [];
+      return;
+    }
+    debouncedSearch(weekIdNum, searchQuery);
+  });
+}, { deep: true });
+
+// Watch for persona rows changes to update filtered results
+watch(personaRows, (newRows) => {
+  Object.keys(newRows).forEach(weekId => {
+    const weekIdNum = parseInt(weekId);
+    // Only update filtered results if there's no active search
+    if (!personaSearchQueries.value[weekIdNum] || !personaSearchQueries.value[weekIdNum].trim()) {
+      filteredPersonas.value[weekIdNum] = newRows[weekIdNum] || [];
+    }
+  });
+}, { deep: true });
+
+// Watch for active tab changes to ensure filtered results are up to date
+watch(activeTab, (newTab) => {
+  if (newTab) {
+    // Refresh search results for the active tab
+    const searchQuery = personaSearchQueries.value[newTab] || '';
+    if (searchQuery.trim()) {
+      debouncedSearch(newTab, searchQuery);
+    } else {
+      filteredPersonas.value[newTab] = personaRows.value[newTab] || [];
+    }
+  }
+});
+
 // Initialize persona rows when weeks are available
 const initializePersonaRows = () => {
   if (props.weeks.length > 0) {
@@ -490,6 +708,15 @@ const initializePersonaRows = () => {
     props.weeks.forEach(week => {
       if (!personaRows.value[week.id]) {
         personaRows.value[week.id] = [];
+      }
+      if (!personaSearchQueries.value[week.id]) {
+        personaSearchQueries.value[week.id] = '';
+      }
+      if (!filteredPersonas.value[week.id]) {
+        filteredPersonas.value[week.id] = [];
+      }
+      if (!isSearchingPersonas.value[week.id]) {
+        isSearchingPersonas.value[week.id] = false;
       }
     });
   }
@@ -581,6 +808,12 @@ const addPersonaRow = (weekId: number) => {
   
   console.log(`Adding new persona row for week ${weekNumber}:`, newPersona);
   personaRows.value[weekId].push(newPersona);
+  
+  // Update filtered personas for this week (only if no active search)
+  if (!personaSearchQueries.value[weekId] || !personaSearchQueries.value[weekId].trim()) {
+    filteredPersonas.value[weekId] = personaRows.value[weekId];
+  }
+  
   console.log(`Updated personaRows for week ${weekNumber}:`, personaRows.value[weekId]);
 };
 
@@ -613,6 +846,11 @@ const removePersonaRow = async (weekId: number, index: number) => {
     // Remove from local state
     personaRows.value[weekId].splice(index, 1);
     console.log(`Removed persona at index ${index} from week ${weekId}`);
+    
+    // Update filtered personas for this week (only if no active search)
+    if (!personaSearchQueries.value[weekId] || !personaSearchQueries.value[weekId].trim()) {
+      filteredPersonas.value[weekId] = personaRows.value[weekId];
+    }
     
   } catch (error: any) {
     console.error('Error deleting persona:', error);
@@ -665,6 +903,17 @@ const updatePersonaValue = (weekId: number, index: number, path: string, value: 
     }
   }
   
+  // If updating the name field, refresh the filtered results
+  if (finalPart === 'name') {
+    // If there's an active search, re-run the search
+    if (personaSearchQueries.value[weekId] && personaSearchQueries.value[weekId].trim()) {
+      debouncedSearch(weekId, personaSearchQueries.value[weekId]);
+    } else {
+      // Otherwise, just update the filtered results
+      filteredPersonas.value[weekId] = personaRows.value[weekId];
+    }
+  }
+  
   console.log(`Updated ${path} to ${value} for week ${weekId}, persona ${index}`);
 };
 
@@ -692,6 +941,12 @@ const loadExistingBuckets = async () => {
       // Ensure the week entry exists in personaRows
       if (!personaRows.value[week.id]) {
         personaRows.value[week.id] = [];
+      }
+      if (!personaSearchQueries.value[week.id]) {
+        personaSearchQueries.value[week.id] = '';
+      }
+      if (!filteredPersonas.value[week.id]) {
+        filteredPersonas.value[week.id] = [];
       }
       
       const bucketsResponse = await bucketsApi.getBucketsBySeasonAndWeek(props.season.id, week.id);
@@ -759,11 +1014,27 @@ const loadExistingBuckets = async () => {
         console.log(`loadExistingBuckets: Converted personas for week ${week.weekNumber}:`, personas);
         console.log(`loadExistingBuckets: Sample persona structure:`, JSON.stringify(personas[0], null, 2));
         personaRows.value[week.id] = personas;
+        
+        // Initialize search query and filtered personas for this week
+        if (!personaSearchQueries.value[week.id]) {
+          personaSearchQueries.value[week.id] = '';
+        }
+        filteredPersonas.value[week.id] = personas;
+        if (!isSearchingPersonas.value[week.id]) {
+          isSearchingPersonas.value[week.id] = false;
+        }
       } else {
         console.log(`loadExistingBuckets: No buckets found for week ${week.weekNumber} or API call failed`);
         console.log(`loadExistingBuckets: Response success: ${bucketsResponse.success}, data:`, bucketsResponse.data);
         // Ensure empty array is set for this week
         personaRows.value[week.id] = [];
+        if (!personaSearchQueries.value[week.id]) {
+          personaSearchQueries.value[week.id] = '';
+        }
+        filteredPersonas.value[week.id] = [];
+        if (!isSearchingPersonas.value[week.id]) {
+          isSearchingPersonas.value[week.id] = false;
+        }
       }
     }
     
@@ -1096,7 +1367,7 @@ const openEventSelector = (weekId: number, index: number) => {
   currentPersonaContext.value = { weekId, index };
   selectedEventId.value = null;
   eventSearchQuery.value = '';
-  searchResults.value = [];
+  eventSearchResults.value = []; // Clear search results for the specific week
   eventSelectorOpen.value = true;
   
   // Load initial events
@@ -1110,7 +1381,7 @@ const searchEvents = async () => {
       searchingEvents.value = true;
       const response = await eventsApi.getEvents({ limit: 50 });
       if (response.success && response.data) {
-        searchResults.value = response.data;
+        eventSearchResults.value = response.data;
       }
     } catch (error) {
       console.error('Failed to load events:', error);
@@ -1126,7 +1397,7 @@ const searchEvents = async () => {
         limit: 20 
       });
       if (response.success && response.data) {
-        searchResults.value = response.data;
+        eventSearchResults.value = response.data;
       }
     } catch (error) {
       console.error('Failed to search events:', error);
@@ -1145,14 +1416,14 @@ const closeEventSelector = () => {
   currentPersonaContext.value = null;
   selectedEventId.value = null;
   eventSearchQuery.value = '';
-  searchResults.value = [];
+  eventSearchResults.value = []; // Clear all search results
 };
 
 const confirmEventSelection = () => {
   if (!currentPersonaContext.value || !selectedEventId.value) return;
   
   const { weekId, index } = currentPersonaContext.value;
-  const selectedEvent = searchResults.value.find(e => e.id === selectedEventId.value);
+  const selectedEvent = eventSearchResults.value.find(e => e.id === selectedEventId.value);
   
   if (selectedEvent && personaRows.value[weekId] && personaRows.value[weekId][index]) {
     personaRows.value[weekId][index].eventId = selectedEvent.id;
@@ -1208,8 +1479,72 @@ const validateWeekPersonas = async () => {
   }
 };
 
+// Function to import a persona from another week/season
+const importPersonaToWeek = async (targetWeekId: number, persona: any) => {
+  if (!props.season) return;
+  
+  const week = props.weeks.find(w => w.id === targetWeekId);
+  if (!week) {
+    showError('Error importing persona', 'Target week not found.');
+    return;
+  }
 
+  const weekNumber = week.weekNumber;
+  console.log(`Importing persona "${persona.name}" from ${persona.seasonInfo} ${persona.weekNumber} to week ${weekNumber} (ID: ${targetWeekId})`);
 
+  try {
+    // Create a new local persona entry (not saved to database yet)
+    const importedPersona = {
+      name: persona.name,
+      description: persona.description,
+      personaRules: {
+        level: {
+          min: persona.personaRules?.level?.min,
+          max: persona.personaRules?.level?.max
+        },
+        mmr: {
+          min: persona.personaRules?.mmr?.min,
+          max: persona.personaRules?.mmr?.max
+        },
+        spending: {
+          min: persona.personaRules?.spending?.min,
+          max: persona.personaRules?.spending?.max
+        }
+      },
+      priority: 1, // Default priority, user can change
+      eventId: persona.eventId,
+      eventName: persona.eventName,
+      // No bucketId since this is not saved yet
+      bucketId: undefined
+    };
+
+    console.log('Created imported persona:', importedPersona);
+
+    // Add to the current week's persona list
+    if (!personaRows.value[targetWeekId]) {
+      personaRows.value[targetWeekId] = [];
+    }
+    
+    personaRows.value[targetWeekId].push(importedPersona);
+    
+    // Update filtered personas for this week (only if no active search)
+    if (!personaSearchQueries.value[targetWeekId] || !personaSearchQueries.value[targetWeekId].trim()) {
+      filteredPersonas.value[targetWeekId] = personaRows.value[targetWeekId];
+    }
+
+    // Clear the search query and results to show the imported persona
+    personaSearchQueries.value[targetWeekId] = '';
+    personaSearchResults.value[targetWeekId] = [];
+
+    showSuccess(`Persona "${persona.name}" imported to Week ${weekNumber}! You can now modify it and save when ready.`);
+    
+    console.log(`Imported persona added to week ${weekNumber}. Total personas: ${personaRows.value[targetWeekId].length}`);
+    
+  } catch (error: any) {
+    console.error('Error importing persona:', error);
+    showError('Failed to import persona', 'An unexpected error occurred while importing.');
+  }
+};
 
 
 const formatDate = (dateString: string) => {
@@ -1259,8 +1594,27 @@ const formatDate = (dateString: string) => {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
+.persona-row > td {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
 .persona-input {
   font-size: 0.9rem;
+}
+
+.persona-search-field {
+  max-width: 400px;
+}
+
+/* Loading spinner animation */
+:deep(.mdi-spin) {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Event selector styling */
@@ -1295,7 +1649,41 @@ const formatDate = (dateString: string) => {
   color: rgba(0, 0, 0, 0.6);
 }
 
+/* Persona search results dropdown styling */
+.search-results-dropdown {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 4px;
+  max-height: 200px; /* Adjust as needed */
+  overflow-y: auto;
+}
 
+/* New style for overlay */
+.search-results-overlay {
+  position: absolute;
+  top: 100%; /* Position below the search field */
+  left: 0;
+  width: 100%;
+  z-index: 100; /* Ensure it's above other content */
+  pointer-events: none; /* Allow clicks to pass through to underlying elements */
+}
 
+/* Search container positioning */
+.search-container {
+  position: relative;
+}
+
+/* Updated dropdown styling for overlay */
+.search-results-dropdown {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  margin-top: 8px; /* Space between search field and dropdown */
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  pointer-events: auto; /* Re-enable pointer events for the dropdown content */
+}
 
 </style>

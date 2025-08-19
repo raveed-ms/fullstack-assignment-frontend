@@ -80,6 +80,7 @@
                       color="primary"
                       class="mb-3"
                       width="100%"
+                      @update:model-value="onTimeSelected"
                     ></v-time-picker>
                     <div class="d-flex justify-end">
                       <v-btn
@@ -174,18 +175,31 @@ const editForm = ref({
 
 // Computed properties for date handling
 const displayDateTime = computed(() => {
-  if (!editForm.value.startDate || !editForm.value.startTime) return '';
+  const rawDate: any = editForm.value.startDate as any;
+  const rawTime: any = editForm.value.startTime as any;
+
+  if (!rawDate || !rawTime) return '';
+
+  // Normalize date to YYYY-MM-DD string
+  let startDateStr: string | null = null;
+  if (typeof rawDate === 'string') {
+    startDateStr = rawDate;
+  } else if (rawDate instanceof Date) {
+    startDateStr = rawDate.toISOString().split('T')[0];
+  } else {
+    const parsed = new Date(rawDate);
+    if (!isNaN(parsed.getTime())) {
+      startDateStr = parsed.toISOString().split('T')[0];
+    }
+  }
+
+  if (!startDateStr || typeof rawTime !== 'string') return '';
+
   try {
-    // Create date string in local timezone without timezone conversion
-    const dateString = editForm.value.startDate + 'T' + editForm.value.startTime;
-    
-    // Parse the date and time without timezone conversion
-    const [year, month, day] = editForm.value.startDate.split('-').map(Number);
-    const [hours, minutes] = editForm.value.startTime.split(':').map(Number);
-    
-    // Create date object in local timezone
+    const [year, month, day] = startDateStr.split('-').map(Number);
+    const [hours, minutes] = rawTime.split(':').map(Number);
+
     const localDate = new Date(year, month - 1, day, hours, minutes);
-    
     return localDate.toLocaleString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -194,7 +208,8 @@ const displayDateTime = computed(() => {
       minute: '2-digit',
       hour12: true
     });
-  } catch {
+  } catch (error) {
+    console.error('Error in displayDateTime:', error);
     return '';
   }
 });
@@ -228,6 +243,11 @@ watch(() => props.season, (newSeason) => {
   }
 }, { immediate: true });
 
+// Watch for changes in editForm to debug updates
+watch(editForm, (newForm) => {
+  console.log('editForm changed:', newForm);
+}, { deep: true });
+
 const closeModal = () => {
   emit('update:modelValue', false);
 };
@@ -238,11 +258,28 @@ const openWeeksModal = () => {
   }
 };
 
-const onDateSelected = (date: string) => {
-  editForm.value.startDate = date;
+const onDateSelected = (date: any) => {
+  // Normalize to YYYY-MM-DD string regardless of picker output type
+  if (typeof date === 'string') {
+    editForm.value.startDate = date;
+  } else if (date instanceof Date) {
+    editForm.value.startDate = date.toISOString().split('T')[0];
+  } else {
+    const d = new Date(date);
+    if (!isNaN(d.getTime())) {
+      editForm.value.startDate = d.toISOString().split('T')[0];
+    }
+  }
+};
+
+const onTimeSelected = (time: string) => {
+  editForm.value.startTime = time;
 };
 
 const onDateTimeConfirmed = () => {
+  console.log('DateTime confirmed. Final form values:', editForm.value);
+  console.log('startDate:', editForm.value.startDate);
+  console.log('startTime:', editForm.value.startTime);
   showDatePicker.value = false;
 };
 
@@ -252,14 +289,19 @@ const saveChanges = async () => {
   isLoading.value = true;
   
   try {
+    // Normalize potential Date object from picker
+    const rawDate: any = editForm.value.startDate as any;
+    const startDateStr = typeof rawDate === 'string' ? rawDate : new Date(rawDate).toISOString().split('T')[0];
+    const timeStr = typeof editForm.value.startTime === 'string' ? editForm.value.startTime : '00:00';
+
     // Convert startDate and startTime to ISO string and prize to cents for API
     // Treat the selected time as local time and convert to UTC
-    const [year, month, day] = editForm.value.startDate.split('-').map(Number);
-    const [hours, minutes] = editForm.value.startTime.split(':').map(Number);
-    
+    const [year, month, day] = startDateStr.split('-').map(Number);
+    const [hours, minutes] = timeStr.split(':').map(Number);
+
     // Create date object in local timezone
     const localDate = new Date(year, month - 1, day, hours, minutes);
-    
+
     const updateData: SeasonUpdate = {
       ...editForm.value,
       startDate: localDate.toISOString(), // Convert local time to UTC ISO string
