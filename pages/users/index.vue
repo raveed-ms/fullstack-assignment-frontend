@@ -177,6 +177,7 @@
                       :headers="tableHeaders"
                       :items="users"
                       :loading="isLoading"
+                      :items-per-page="itemsPerPage"
                       class="users-table"
                       hover
                       hide-default-footer

@@ -94,9 +94,11 @@
                   </div>
                   <div v-else>
                     <v-data-table
+                      :key="`buckets-table-${currentPage}-${itemsPerPage}`"
                       :headers="tableHeaders"
                       :items="buckets"
                       :loading="isLoading"
+                      :items-per-page="itemsPerPage"
                       class="buckets-table"
                       hover
                       hide-default-footer

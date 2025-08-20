@@ -143,9 +143,11 @@
                   <!-- Changelogs Table -->
                   <div v-else>
                     <v-data-table
+                      :key="`changelogs-table-${currentPage}-${itemsPerPage}`"
                       :headers="tableHeaders"
                       :items="processedChangelogs"
                       :loading="isLoading"
+                      :items-per-page="itemsPerPage"
                       class="changelogs-table"
                       hover
                       hide-default-footer

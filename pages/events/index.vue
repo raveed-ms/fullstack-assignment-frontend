@@ -117,6 +117,7 @@
                       :headers="tableHeaders"
                       :items="events"
                       :loading="isLoading"
+                      :items-per-page="itemsPerPage"
                       class="events-table"
                       hover
                       hide-default-footer

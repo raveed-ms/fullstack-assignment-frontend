@@ -115,6 +115,7 @@
                       :headers="tableHeaders"
                       :items="seasons"
                       :loading="isLoading"
+                      :items-per-page="itemsPerPage"
                       class="seasons-table"
                       hover
                       hide-default-footer

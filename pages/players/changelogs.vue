@@ -134,9 +134,11 @@
 
                     
                     <v-data-table
+                      :key="`changelogs-table-${currentPage}-${itemsPerPage}`"
                       :headers="tableHeaders"
                       :items="changelogs"
                       :loading="isLoading"
+                      :items-per-page="itemsPerPage"
                       class="changelogs-table"
                       hover
                       hide-default-footer
