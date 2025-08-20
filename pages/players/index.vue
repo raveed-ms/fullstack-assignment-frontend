@@ -5,61 +5,36 @@
         <v-container fluid class="bg-grey-lighten-4 pa-0 ma-0">
           <v-row class="ma-0">
             <v-col cols="12">
-              
+
               <!-- Search and Filters -->
               <v-card class="mb-6" elevation="1">
                 <v-card-text class="pa-4">
                   <v-row class="align-center">
                     <!-- Search -->
                     <v-col cols="12" md="4">
-                      <v-text-field
-                        v-model="searchQuery"
-                        :label="`Search by ${searchFieldLabel}`"
-                        :placeholder="`Enter ${searchFieldLabel.toLowerCase()}...`"
-                        prepend-inner-icon="mdi-magnify"
-                        variant="outlined"
-                        density="compact"
-                        clearable
-                        class="input-field"
-                      ></v-text-field>
+                      <v-text-field v-model="searchQuery" :label="`Search by ${searchFieldLabel}`"
+                        :placeholder="`Enter ${searchFieldLabel.toLowerCase()}...`" prepend-inner-icon="mdi-magnify"
+                        variant="outlined" density="compact" clearable class="input-field"></v-text-field>
                     </v-col>
-                    
+
                     <!-- Search Field Selector -->
                     <v-col cols="12" md="3">
-                      <v-select
-                        v-model="searchField"
-                        label="Search By"
-                        :items="searchFieldOptions"
-                        variant="outlined"
-                        density="compact"
-                        class="input-field"
-                      ></v-select>
+                      <v-select v-model="searchField" label="Search By" :items="searchFieldOptions" variant="outlined"
+                        density="compact" class="input-field"></v-select>
                     </v-col>
 
 
                   </v-row>
-                  
+
                   <!-- Filter Actions -->
                   <v-row class="mt-2">
                     <v-col cols="12" class="d-flex gap-2">
-                      <v-btn
-                        color="secondary"
-                        variant="outlined"
-                        size="small"
-                        @click="clearFilters"
-                        :disabled="!hasActiveFilters"
-                        class="profile-button me-4"
-                      >
+                      <v-btn color="secondary" variant="outlined" size="small" @click="clearFilters"
+                        :disabled="!hasActiveFilters" class="profile-button me-4">
                         Clear Filters
                       </v-btn>
-                      <v-btn
-                        color="primary"
-                        variant="outlined"
-                        size="small"
-                        @click="loadPlayers"
-                        :loading="isLoading"
-                        class="profile-button"
-                      >
+                      <v-btn color="primary" variant="outlined" size="small" @click="loadPlayers" :loading="isLoading"
+                        class="profile-button">
                         Refresh
                       </v-btn>
                       <v-spacer></v-spacer>
@@ -73,35 +48,16 @@
                 <v-card-text class="pa-4">
                   <v-row>
                     <v-col cols="12" md="3">
-                      <v-select
-                        v-model="sortField"
-                        label="Sort By"
-                        :items="sortOptions"
-                        variant="outlined"
-                        density="compact"
-                        @update:model-value="handleSortChange"
-                        class="input-field"
-                      ></v-select>
+                      <v-select v-model="sortField" label="Sort By" :items="sortOptions" variant="outlined"
+                        density="compact" @update:model-value="handleSortChange" class="input-field"></v-select>
                     </v-col>
                     <v-col cols="12" md="3">
-                      <v-select
-                        v-model="sortOrder"
-                        label="Sort Order"
-                        :items="sortOrderOptions"
-                        variant="outlined"
-                        density="compact"
-                        @update:model-value="handleSortChange"
-                        class="input-field"
-                      ></v-select>
+                      <v-select v-model="sortOrder" label="Sort Order" :items="sortOrderOptions" variant="outlined"
+                        density="compact" @update:model-value="handleSortChange" class="input-field"></v-select>
                     </v-col>
                     <v-col cols="12" md="6" class="d-flex justify-end">
-                      <v-btn
-                        color="secondary"
-                        variant="outlined"
-                        size="small"
-                        @click="toggleFilters"
-                        class="profile-button"
-                      >
+                      <v-btn color="secondary" variant="outlined" size="small" @click="toggleFilters"
+                        class="profile-button">
                         <v-icon start>mdi-filter</v-icon>
                         {{ showFilters ? 'Hide' : 'Show' }} Filters
                       </v-btn>
@@ -117,37 +73,19 @@
                     <v-icon class="mr-2">mdi-filter</v-icon>
                     <span class="text-subtitle-2">Advanced Filters</span>
                   </div>
-                  
+
                   <v-row>
                     <!-- Basic Info Filters -->
                     <v-col cols="12" md="4">
-                      <v-text-field
-                        v-model="filters.location"
-                        label="Location"
-                        clearable
-                        density="compact"
-                        variant="outlined"
-                        class="input-field"
-                      />
+                      <v-text-field v-model="filters.location" label="Location" clearable density="compact"
+                        variant="outlined" class="input-field" />
                     </v-col>
                     <v-col cols="12" md="4">
-                      <v-select
-                        v-model="filters.chatRole"
-                        :items="chatRoleOptions"
-                        label="Chat Role"
-                        clearable
-                        density="compact"
-                        variant="outlined"
-                        class="input-field"
-                      />
+                      <v-select v-model="filters.chatRole" :items="chatRoleOptions" label="Chat Role" clearable
+                        density="compact" variant="outlined" class="input-field" />
                     </v-col>
                     <v-col cols="12" md="4">
-                      <v-switch
-                        v-model="filters.isBotUser"
-                        label="Bot Users Only"
-                        density="compact"
-                        hide-details
-                      />
+                      <v-switch v-model="filters.isBotUser" label="Bot Users Only" density="compact" hide-details />
                     </v-col>
                   </v-row>
 
@@ -156,33 +94,37 @@
                     <v-col cols="12" md="6">
                       <div class="mb-3">
                         <label class="text-caption">GIR (Greens in Regulation) %</label>
-                        <v-range-slider
-                          v-model="filters.statsGIR"
-                          :min="0"
-                          :max="100"
-                          :step="0.1"
-                          thumb-label="always"
-                          density="compact"
-                        />
-                        <div class="text-caption text-center mt-1">
-                          {{ filters.statsGIR[0] }}% - {{ filters.statsGIR[1] }}%
-                        </div>
+                        <v-row>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.statsGIR.min" label="Min GIR %" placeholder="Enter min value"
+                              type="number" :min="0" :max="100" :step="0.1" density="compact" variant="outlined"
+                              class="input-field" @update:model-value="handleGIRMinChange" />
+                          </v-col>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.statsGIR.max" label="Max GIR %" placeholder="Enter max value"
+                              type="number" :min="0" :max="100" :step="0.1" density="compact" variant="outlined"
+                              class="input-field" @update:model-value="handleGIRMaxChange" />
+                          </v-col>
+                        </v-row>
                       </div>
                     </v-col>
                     <v-col cols="12" md="6">
                       <div class="mb-3">
                         <label class="text-caption">Win Ratio %</label>
-                        <v-range-slider
-                          v-model="filters.statsWinRatio"
-                          :min="0"
-                          :max="100"
-                          :step="0.1"
-                          thumb-label="always"
-                          density="compact"
-                        />
-                        <div class="text-caption text-center mt-1">
-                          {{ filters.statsWinRatio[0] }}% - {{ filters.statsWinRatio[1] }}%
-                        </div>
+                        <v-row>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.statsWinRatio.min" label="Min Win %"
+                              placeholder="Enter min value" type="number" :min="0" :max="100" :step="0.1"
+                              density="compact" variant="outlined" class="input-field"
+                              @update:model-value="handleWinRatioMinChange" />
+                          </v-col>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.statsWinRatio.max" label="Max Win %"
+                              placeholder="Enter max value" type="number" :min="0" :max="100" :step="0.1"
+                              density="compact" variant="outlined" class="input-field"
+                              @update:model-value="handleWinRatioMaxChange" />
+                          </v-col>
+                        </v-row>
                       </div>
                     </v-col>
                   </v-row>
@@ -192,33 +134,37 @@
                     <v-col cols="12" md="6">
                       <div class="mb-3">
                         <label class="text-caption">Career Level</label>
-                        <v-range-slider
-                          v-model="filters.careerLevel"
-                          :min="1"
-                          :max="100"
-                          :step="1"
-                          thumb-label="always"
-                          density="compact"
-                        />
-                        <div class="text-caption text-center mt-1">
-                          Level {{ filters.careerLevel[0] }} - {{ filters.careerLevel[1] }}
-                        </div>
+                        <v-row>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.careerLevel.min" label="Min Level"
+                              placeholder="Enter min level" type="number" :min="1" :max="100" :step="1"
+                              density="compact" variant="outlined" class="input-field"
+                              @update:model-value="handleCareerLevelMinChange" />
+                          </v-col>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.careerLevel.max" label="Max Level"
+                              placeholder="Enter max level" type="number" :min="1" :max="100" :step="1"
+                              density="compact" variant="outlined" class="input-field"
+                              @update:model-value="handleCareerLevelMaxChange" />
+                          </v-col>
+                        </v-row>
                       </div>
                     </v-col>
                     <v-col cols="12" md="6">
                       <div class="mb-3">
                         <label class="text-caption">Career XP</label>
-                        <v-range-slider
-                          v-model="filters.careerXP"
-                          :min="0"
-                          :max="1000000"
-                          :step="1000"
-                          thumb-label="always"
-                          density="compact"
-                        />
-                        <div class="text-caption text-center mt-1">
-                          {{ (filters.careerXP[0] / 1000).toFixed(0) }}k - {{ (filters.careerXP[1] / 1000).toFixed(0) }}k XP
-                        </div>
+                        <v-row>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.careerXP.min" label="Min XP" placeholder="Enter min XP"
+                              type="number" :step="1" density="compact" variant="outlined" class="input-field"
+                              @update:model-value="handleCareerXPMinChange" />
+                          </v-col>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.careerXP.max" label="Max XP" placeholder="Enter max XP"
+                              type="number" :min="0" :max="1000000" :step="1" density="compact" variant="outlined"
+                              class="input-field" @update:model-value="handleCareerXPMaxChange" />
+                          </v-col>
+                        </v-row>
                       </div>
                     </v-col>
                   </v-row>
@@ -228,35 +174,37 @@
                     <v-col cols="12" md="6">
                       <div class="mb-3">
                         <label class="text-caption">MOU (Measure of Use)</label>
-                        <v-range-slider
-                          v-model="filters.mou"
-                          :min="-200"
-                          :max="200"
-                          :step="1"
-                          thumb-label="always"
-                          density="compact"
-                        />
-                        <div class="text-caption text-center mt-1">
-                          MOU {{ filters.mou[0] }} - {{ filters.mou[1] }}
-                        </div>
+                        <v-row>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.mou.min" label="Min MOU" placeholder="Enter min MOU"
+                              type="number" :min="-200" :max="200" :step="1" density="compact" variant="outlined"
+                              class="input-field" @update:model-value="handleMOUMinChange" />
+                          </v-col>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.mou.max" label="Max MOU" placeholder="Enter max MOU"
+                              type="number" :min="-200" :max="200" :step="1" density="compact" variant="outlined"
+                              class="input-field" @update:model-value="handleMOUMaxChange" />
+                          </v-col>
+                        </v-row>
                       </div>
                     </v-col>
-                    
+
                     <!-- Cash Deposit Filter -->
                     <v-col cols="12" md="6">
                       <div class="mb-3">
                         <label class="text-caption">Cash Deposit ($)</label>
-                        <v-range-slider
-                          v-model="filters.cashDeposit"
-                          :min="0"
-                          :max="1000"
-                          :step="10"
-                          thumb-label="always"
-                          density="compact"
-                        />
-                        <div class="text-caption text-center mt-1">
-                          ${{ (filters.cashDeposit[0] / 100).toFixed(2) }} - ${{ (filters.cashDeposit[1] / 100).toFixed(2) }}
-                        </div>
+                        <v-row>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.cashDeposit.min" label="Min $" placeholder="Enter min amount"
+                              type="number" :min="0" :max="1000" :step="0.01" density="compact" variant="outlined"
+                              class="input-field" @update:model-value="handleCashDepositMinChange" />
+                          </v-col>
+                          <v-col cols="6">
+                            <v-text-field v-model="filters.cashDeposit.max" label="Max $" placeholder="Enter max amount"
+                              type="number" :min="0" :max="1000" :step="0.01" density="compact" variant="outlined"
+                              class="input-field" @update:model-value="handleCashDepositMaxChange" />
+                          </v-col>
+                        </v-row>
                       </div>
                     </v-col>
                   </v-row>
@@ -264,82 +212,39 @@
                   <v-row>
                     <!-- Date Range Filters -->
                     <v-col cols="12" md="6">
-                      <v-menu
-                        v-model="showDateFromPicker"
-                        :close-on-content-click="false"
-                        transition="scale-transition"
-                        offset-y
-                        min-width="auto"
-                      >
+                      <v-menu v-model="showDateFromPicker" :close-on-content-click="false" transition="scale-transition"
+                        offset-y min-width="auto">
                         <template v-slot:activator="{ props }">
-                          <v-text-field
-                            v-model="filters.createTimeFrom"
-                            label="Created From"
-                            readonly
-                            v-bind="props"
-                            prepend-inner-icon="mdi-calendar"
-                            density="compact"
-                            variant="outlined"
-                            class="input-field"
-                            clearable
-                          />
+                          <v-text-field v-model="filters.createTimeFrom" label="Created From" readonly v-bind="props"
+                            prepend-inner-icon="mdi-calendar" density="compact" variant="outlined" class="input-field"
+                            clearable />
                         </template>
-                        <v-date-picker
-                          v-model="filters.createTimeFrom"
-                          @update:model-value="showDateFromPicker = false"
-                        />
+                        <v-date-picker v-model="filters.createTimeFrom"
+                          @update:model-value="showDateFromPicker = false" />
                       </v-menu>
                     </v-col>
                     <v-col cols="12" md="6">
-                      <v-menu
-                        v-model="showDateToPicker"
-                        :close-on-content-click="false"
-                        transition="scale-transition"
-                        offset-y
-                        min-width="auto"
-                      >
+                      <v-menu v-model="showDateToPicker" :close-on-content-click="false" transition="scale-transition"
+                        offset-y min-width="auto">
                         <template v-slot:activator="{ props }">
-                          <v-text-field
-                            v-model="filters.createTimeTo"
-                            label="Created To"
-                            readonly
-                            v-bind="props"
-                            prepend-inner-icon="mdi-calendar"
-                            density="compact"
-                            variant="outlined"
-                            class="input-field"
-                            clearable
-                          />
+                          <v-text-field v-model="filters.createTimeTo" label="Created To" readonly v-bind="props"
+                            prepend-inner-icon="mdi-calendar" density="compact" variant="outlined" class="input-field"
+                            clearable />
                         </template>
-                        <v-date-picker
-                          v-model="filters.createTimeTo"
-                          @update:model-value="showDateToPicker = false"
-                        />
+                        <v-date-picker v-model="filters.createTimeTo" @update:model-value="showDateToPicker = false" />
                       </v-menu>
                     </v-col>
                   </v-row>
 
                   <v-row>
                     <v-col cols="12" class="d-flex justify-end">
-                      <v-btn
-                        color="secondary"
-                        variant="outlined"
-                        size="small"
-                        @click="clearAllFilters"
-                        :disabled="!hasActiveFilters"
-                        class="profile-button me-3"
-                      >
+                      <v-btn color="secondary" variant="outlined" size="small" @click="clearAllFilters"
+                        :disabled="!hasActiveFilters" class="profile-button me-3">
                         <v-icon start>mdi-filter-off</v-icon>
                         Clear All Filters
                       </v-btn>
-                      <v-btn
-                        color="primary"
-                        variant="outlined"
-                        size="small"
-                        @click="applyFilters"
-                        :disabled="!hasActiveFilters"
-                        class="profile-button"
-                      >
+                      <v-btn color="primary" variant="outlined" size="small" @click="applyFilters"
+                        :disabled="!hasActiveFilters" class="profile-button">
                         <v-icon start>mdi-filter-check</v-icon>
                         Apply Filters
                       </v-btn>
@@ -348,173 +253,126 @@
                 </v-card-text>
               </v-card>
 
-    <!-- Players Table -->
-    <v-card class="players-table-card">
+              <!-- Players Table -->
+              <v-card class="players-table-card">
 
 
-      <v-card-text class="pa-0">
-        <!-- Loading State -->
-        <div v-if="isLoading" class="text-center py-12">
-          <v-progress-circular indeterminate color="primary" size="48"></v-progress-circular>
-          <div class="mt-4 text-body-1 text-grey">Loading players...</div>
-        </div>
+                <v-card-text class="pa-0">
+                  <!-- Loading State -->
+                  <div v-if="isLoading" class="text-center py-12">
+                    <v-progress-circular indeterminate color="primary" size="48"></v-progress-circular>
+                    <div class="mt-4 text-body-1 text-grey">Loading players...</div>
+                  </div>
 
-        <!-- Players Table -->
-        <div v-else>
-          <v-data-table
-            :key="`players-table-${currentPage}-${itemsPerPage}`"
-            :headers="tableHeaders"
-            :items="players"
-            :loading="isLoading"
-            :items-per-page="itemsPerPage"
-            class="players-table"
-            hover
-            hide-default-footer
-          >
-            <!-- ID Column -->
-            <template v-slot:item.id="{ item }">
-              <span class="font-mono text-caption">{{ item.id }}</span>
-            </template>
+                  <!-- Players Table -->
+                  <div v-else>
+                    <v-data-table :key="`players-table-${currentPage}-${itemsPerPage}`" :headers="tableHeaders"
+                      :items="players" :loading="isLoading" :items-per-page="itemsPerPage" class="players-table" hover
+                      hide-default-footer>
+                      <!-- ID Column -->
+                      <template v-slot:item.id="{ item }">
+                        <span class="font-mono text-caption">{{ item.id }}</span>
+                      </template>
 
-            <!-- Username Column -->
-            <template v-slot:item.username="{ item }">
-              <span class="font-weight-medium">{{ item.username || 'No username' }}</span>
-            </template>
+                      <!-- Username Column -->
+                      <template v-slot:item.username="{ item }">
+                        <span class="font-weight-medium">{{ item.username || 'No username' }}</span>
+                      </template>
 
-            <!-- Display Name Column -->
-            <template v-slot:item.display_name="{ item }">
-              <span>{{ item.display_name || 'No display name' }}</span>
-            </template>
+                      <!-- Display Name Column -->
+                      <template v-slot:item.display_name="{ item }">
+                        <span>{{ item.display_name || 'No display name' }}</span>
+                      </template>
 
-            <!-- Email Column -->
-            <template v-slot:item.email="{ item }">
-              <span>{{ item.email || 'No email' }}</span>
-            </template>
+                      <!-- Email Column -->
+                      <template v-slot:item.email="{ item }">
+                        <span>{{ item.email || 'No email' }}</span>
+                      </template>
 
-            <!-- Player Type Column -->
-            <template v-slot:item.player_type="{ item }">
-              <v-chip
-                :color="item.isBotUser ? 'grey-darken-2' : 'primary'"
-                variant="flat"
-                size="small"
-                :prepend-icon="item.isBotUser ? 'mdi-robot' : 'mdi-account'"
-              >
-                {{ item.isBotUser ? 'Bot' : 'Human' }}
-              </v-chip>
-            </template>
+                      <!-- Player Type Column -->
+                      <template v-slot:item.player_type="{ item }">
+                        <v-chip :color="item.isBotUser ? 'grey-darken-2' : 'primary'" variant="flat" size="small"
+                          :prepend-icon="item.isBotUser ? 'mdi-robot' : 'mdi-account'">
+                          {{ item.isBotUser ? 'Bot' : 'Human' }}
+                        </v-chip>
+                      </template>
 
-            <!-- MOU Column -->
-            <template v-slot:item.mou="{ item }">
-              <v-chip
-                :color="getMouColor(item.mou)"
-                variant="flat"
-                size="small"
-                :prepend-icon="getMouIcon(item.mou)"
-              >
-                {{ formatMouValue(item.mou) }}
-              </v-chip>
-            </template>
+                      <!-- MOU Column -->
+                      <template v-slot:item.mou="{ item }">
+                        <v-chip :color="getMouColor(item.mou)" variant="flat" size="small"
+                          :prepend-icon="getMouIcon(item.mou)">
+                          {{ formatMouValue(item.mou) }}
+                        </v-chip>
+                      </template>
 
-            <!-- Cash Deposit Column -->
-            <template v-slot:item.cashDeposit="{ item }">
-              <v-chip
-                :color="getCashDepositColor(item.cashDeposit)"
-                variant="flat"
-                size="small"
-                :prepend-icon="getCashDepositIcon(item.cashDeposit)"
-              >
-                {{ formatCashDepositValue(item.cashDeposit) }}
-              </v-chip>
-            </template>
+                      <!-- Cash Deposit Column -->
+                      <template v-slot:item.cashDeposit="{ item }">
+                        <v-chip :color="getCashDepositColor(item.cashDeposit)" variant="flat" size="small"
+                          :prepend-icon="getCashDepositIcon(item.cashDeposit)">
+                          {{ formatCashDepositValue(item.cashDeposit) }}
+                        </v-chip>
+                      </template>
 
-            <!-- Create Time Column -->
-            <template v-slot:item.create_time="{ item }">
-              <span class="text-caption">{{ formatDate(item.create_time) }}</span>
-            </template>
+                      <!-- Create Time Column -->
+                      <template v-slot:item.create_time="{ item }">
+                        <span class="text-caption">{{ formatDate(item.create_time) }}</span>
+                      </template>
 
-            <!-- Update Time Column -->
-            <template v-slot:item.update_time="{ item }">
-              <span class="text-caption">{{ formatDate(item.update_time) }}</span>
-            </template>
+                      <!-- Update Time Column -->
+                      <template v-slot:item.update_time="{ item }">
+                        <span class="text-caption">{{ formatDate(item.update_time) }}</span>
+                      </template>
 
-            <!-- Actions Column -->
-            <template v-slot:item.actions="{ item }">
-              <div class="d-flex gap-2">
-                <v-btn
-                  color="primary"
-                  variant="text"
-                  size="small"
-                  @click="viewPlayer(item)"
-                >
-                  View
-                </v-btn>
-                <v-btn
-                  color="secondary"
-                  variant="text"
-                  size="small"
-                  @click="editPlayer(item)"
-                >
-                  Edit
-                </v-btn>
-              </div>
-            </template>
-          </v-data-table>
+                      <!-- Actions Column -->
+                      <template v-slot:item.actions="{ item }">
+                        <div class="d-flex gap-2">
+                          <v-btn color="primary" variant="text" size="small" @click="viewPlayer(item)">
+                            View
+                          </v-btn>
+                          <v-btn color="secondary" variant="text" size="small" @click="editPlayer(item)">
+                            Edit
+                          </v-btn>
+                        </div>
+                      </template>
+                    </v-data-table>
 
-          <!-- Custom Pagination -->
-          <div class="custom-pagination pa-6">
-            <div class="d-flex justify-space-between align-center">
-              <!-- Page Size Selector -->
-              <div class="d-flex align-center page-size-section">
-                <v-select
-                  v-model="itemsPerPage"
-                  :items="pageSizeOptions"
-                  variant="outlined"
-                  density="compact"
-                  class="page-size-select"
-                  style="width: 140px"
-                  @update:model-value="handlePageSizeChange"
-                ></v-select>
-              </div>
+                    <!-- Custom Pagination -->
+                    <div class="custom-pagination pa-6">
+                      <div class="d-flex justify-space-between align-center">
+                        <!-- Page Size Selector -->
+                        <div class="d-flex align-center page-size-section">
+                          <v-select v-model="itemsPerPage" :items="pageSizeOptions" variant="outlined" density="compact"
+                            class="page-size-select" style="width: 140px"
+                            @update:model-value="handlePageSizeChange"></v-select>
+                        </div>
 
-              <!-- Page Info -->
-              <div class="page-info text-body-1 font-weight-medium">
-                Page <span class="text-primary font-weight-bold">{{ currentPage }}</span> of <span class="text-primary font-weight-bold">{{ totalPages }}</span>
-              </div>
+                        <!-- Page Info -->
+                        <div class="page-info text-body-1 font-weight-medium">
+                          Page <span class="text-primary font-weight-bold">{{ currentPage }}</span> of <span
+                            class="text-primary font-weight-bold">{{ totalPages }}</span>
+                        </div>
 
-              <!-- Navigation Controls -->
-              <div class="d-flex align-center gap-3">
-                <v-btn
-                  :disabled="currentPage === 1"
-                  variant="outlined"
-                  size="default"
-                  color="primary"
-                  class="pagination-btn"
-                  @click="() => handlePageChange(currentPage - 1)"
-                  title="Previous Page"
-                >
-                  <v-icon start>mdi-chevron-left</v-icon>
-                  Previous
-                </v-btn>
-                
-                <v-btn
-                  :disabled="currentPage >= totalPages"
-                  variant="outlined"
-                  size="default"
-                  color="primary"
-                  class="pagination-btn"
-                  @click="() => handlePageChange(currentPage + 1)"
-                  title="Next Page"
-                >
-                  Next
-                  <v-icon end>mdi-chevron-right</v-icon>
-                </v-btn>
-              </div>
-            </div>
-          </div>
+                        <!-- Navigation Controls -->
+                        <div class="d-flex align-center gap-3">
+                          <v-btn :disabled="currentPage === 1" variant="outlined" size="default" color="primary"
+                            class="pagination-btn" @click="() => handlePageChange(currentPage - 1)"
+                            title="Previous Page">
+                            <v-icon start>mdi-chevron-left</v-icon>
+                            Previous
+                          </v-btn>
 
-        </div>
-      </v-card-text>
-    </v-card>
+                          <v-btn :disabled="currentPage >= totalPages" variant="outlined" size="default" color="primary"
+                            class="pagination-btn" @click="() => handlePageChange(currentPage + 1)" title="Next Page">
+                            Next
+                            <v-icon end>mdi-chevron-right</v-icon>
+                          </v-btn>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </v-card-text>
+              </v-card>
             </v-col>
           </v-row>
         </v-container>
@@ -523,17 +381,10 @@
   </div>
 
   <!-- Player Details Modal -->
-  <PlayerDetailsModal
-    v-model="playerDetailsModalOpen"
-    :player="selectedPlayer"
-  />
-  
+  <PlayerDetailsModal v-model="playerDetailsModalOpen" :player="selectedPlayer" />
+
   <!-- Edit Player Modal -->
-  <EditPlayerModal
-    v-model="editPlayerModalOpen"
-    :player="selectedPlayer"
-    @save="handleEditPlayer"
-  />
+  <EditPlayerModal v-model="editPlayerModalOpen" :player="selectedPlayer" @save="handleEditPlayer" />
 </template>
 
 <script setup lang="ts">
@@ -583,12 +434,12 @@ const filters = ref({
   location: null as string | null,
   chatRole: null as number | null,
   isBotUser: false as boolean,
-  statsGIR: [0, 100] as [number, number],
-  statsWinRatio: [0, 100] as [number, number],
-  careerLevel: [1, 100] as [number, number],
-  careerXP: [0, 1000000] as [number, number],
-  mou: [-200, 200] as [number, number],
-  cashDeposit: [0, 1000] as [number, number],
+  statsGIR: { min: null as number | null, max: null as number | null },
+  statsWinRatio: { min: null as number | null, max: null as number | null },
+  careerLevel: { min: null as number | null, max: null as number | null },
+  careerXP: { min: null as number | null, max: null as number | null },
+  mou: { min: null as number | null, max: null as number | null },
+  cashDeposit: { min: null as number | null, max: null as number | null },
   createTimeFrom: null as string | null,
   createTimeTo: null as string | null
 });
@@ -655,18 +506,18 @@ const totalPages = computed(() => {
 });
 
 const hasActiveFilters = computed(() => {
-  return searchQuery.value !== '' || 
-         filters.value.location !== null ||
-         filters.value.chatRole !== null ||
-         filters.value.isBotUser !== false ||
-         filters.value.statsGIR[0] !== 0 || filters.value.statsGIR[1] !== 100 ||
-         filters.value.statsWinRatio[0] !== 0 || filters.value.statsWinRatio[1] !== 100 ||
-         filters.value.careerLevel[0] !== 1 || filters.value.careerLevel[1] !== 100 ||
-         filters.value.careerXP[0] !== 0 || filters.value.careerXP[1] !== 1000000 ||
-         filters.value.mou[0] !== -200 || filters.value.mou[1] !== 200 ||
-         filters.value.cashDeposit[0] !== 0 || filters.value.cashDeposit[1] !== 1000 ||
-         filters.value.createTimeFrom !== null ||
-         filters.value.createTimeTo !== null;
+  return searchQuery.value !== '' ||
+    filters.value.location !== null ||
+    filters.value.chatRole !== null ||
+    filters.value.isBotUser !== false ||
+    (filters.value.statsGIR.min !== null || filters.value.statsGIR.max !== null) ||
+    (filters.value.statsWinRatio.min !== null || filters.value.statsWinRatio.max !== null) ||
+    (filters.value.careerLevel.min !== null || filters.value.careerLevel.max !== null) ||
+    (filters.value.careerXP.min !== null || filters.value.careerXP.max !== null) ||
+    (filters.value.mou.min !== null || filters.value.mou.max !== null) ||
+    (filters.value.cashDeposit.min !== null || filters.value.cashDeposit.max !== null) ||
+    filters.value.createTimeFrom !== null ||
+    filters.value.createTimeTo !== null;
 });
 
 const searchFieldLabel = computed(() => {
@@ -678,7 +529,7 @@ const searchFieldLabel = computed(() => {
 const loadPlayers = async () => {
   try {
     isLoading.value = true;
-    
+
     const query: PlayerQuery = {
       limit: itemsPerPage.value,
       skip: (currentPage.value - 1) * itemsPerPage.value,
@@ -695,41 +546,65 @@ const loadPlayers = async () => {
     if (filters.value.isBotUser) {
       query.isBotUser = filters.value.isBotUser;
     }
-    if (filters.value.statsGIR[0] !== 0 || filters.value.statsGIR[1] !== 100) {
-      query.statsGIR = {
-        $gte: filters.value.statsGIR[0],
-        $lte: filters.value.statsGIR[1]
-      };
+    // Only add GIR filter if values are provided
+    if (filters.value.statsGIR.min !== null || filters.value.statsGIR.max !== null) {
+      query.statsGIR = {};
+      if (filters.value.statsGIR.min !== null) {
+        query.statsGIR.$gte = filters.value.statsGIR.min;
+      }
+      if (filters.value.statsGIR.max !== null) {
+        query.statsGIR.$lte = filters.value.statsGIR.max;
+      }
     }
-    if (filters.value.statsWinRatio[0] !== 0 || filters.value.statsWinRatio[1] !== 100) {
-      query.statsWinRatio = {
-        $gte: filters.value.statsWinRatio[0] / 100, // Convert to decimal
-        $lte: filters.value.statsWinRatio[1] / 100
-      };
+    // Only add Win Ratio filter if values are provided
+    if (filters.value.statsWinRatio.min !== null || filters.value.statsWinRatio.max !== null) {
+      query.statsWinRatio = {};
+      if (filters.value.statsWinRatio.min !== null) {
+        query.statsWinRatio.$gte = filters.value.statsWinRatio.min / 100; // Convert to decimal
+      }
+      if (filters.value.statsWinRatio.max !== null) {
+        query.statsWinRatio.$lte = filters.value.statsWinRatio.max / 100; // Convert to decimal
+      }
     }
-    if (filters.value.careerLevel[0] !== 1 || filters.value.careerLevel[1] !== 100) {
-      query.careerLevel = {
-        $gte: filters.value.careerLevel[0],
-        $lte: filters.value.careerLevel[1]
-      };
+    // Only add Career Level filter if values are provided
+    if (filters.value.careerLevel.min !== null || filters.value.careerLevel.max !== null) {
+      query.careerLevel = {};
+      if (filters.value.careerLevel.min !== null) {
+        query.careerLevel.$gte = filters.value.careerLevel.min;
+      }
+      if (filters.value.careerLevel.max !== null) {
+        query.careerLevel.$lte = filters.value.careerLevel.max;
+      }
     }
-    if (filters.value.careerXP[0] !== 0 || filters.value.careerXP[1] !== 1000000) {
-      query.careerXP = {
-        $gte: filters.value.careerXP[0],
-        $lte: filters.value.careerXP[1]
-      };
+    // Only add Career XP filter if values are provided
+    if (filters.value.careerXP.min !== null || filters.value.careerXP.max !== null) {
+      query.careerXP = {};
+      if (filters.value.careerXP.min !== null) {
+        query.careerXP.$gte = filters.value.careerXP.min;
+      }
+      if (filters.value.careerXP.max !== null) {
+        query.careerXP.$lte = filters.value.careerXP.max;
+      }
     }
-    if (filters.value.mou[0] !== -200 || filters.value.mou[1] !== 200) {
-      query.mou = {
-        $gte: filters.value.mou[0],
-        $lte: filters.value.mou[1]
-      };
+    // Only add MOU filter if values are provided
+    if (filters.value.mou.min !== null || filters.value.mou.max !== null) {
+      query.mou = {};
+      if (filters.value.mou.min !== null) {
+        query.mou.$gte = filters.value.mou.min;
+      }
+      if (filters.value.mou.max !== null) {
+        query.mou.$lte = filters.value.mou.max;
+      }
     }
-    if (filters.value.cashDeposit[0] !== 0 || filters.value.cashDeposit[1] !== 1000) {
-      query.cashDeposit = {
-        $gte: filters.value.cashDeposit[0] * 100,  // Convert dollars to cents
-        $lte: filters.value.cashDeposit[1] * 100   // Convert dollars to cents
-      };
+    // Only add Cash Deposit filter if values are provided (convert dollars to cents)
+    if (filters.value.cashDeposit.min !== null || filters.value.cashDeposit.max !== null) {
+      query.cashDeposit = {};
+      if (filters.value.cashDeposit.min !== null) {
+        query.cashDeposit.$gte = Math.round(filters.value.cashDeposit.min * 100); // Convert dollars to cents
+      }
+      if (filters.value.cashDeposit.max !== null) {
+        query.cashDeposit.$lte = Math.round(filters.value.cashDeposit.max * 100); // Convert dollars to cents
+      }
     }
     if (filters.value.createTimeFrom) {
       // Convert date to ISO string and set to start of day in UTC
@@ -795,9 +670,78 @@ const loadPlayers = async () => {
   }
 };
 
+// Event handlers for filter input changes - convert empty strings to null
+const handleGIRMinChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.statsGIR.min = null;
+  }
+};
 
+const handleGIRMaxChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.statsGIR.max = null;
+  }
+};
 
+const handleWinRatioMinChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.statsWinRatio.min = null;
+  }
+};
 
+const handleWinRatioMaxChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.statsWinRatio.max = null;
+  }
+};
+
+const handleCareerLevelMinChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.careerLevel.min = null;
+  }
+};
+
+const handleCareerLevelMaxChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.careerLevel.max = null;
+  }
+};
+
+const handleCareerXPMinChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.careerXP.min = null;
+  }
+};
+
+const handleCareerXPMaxChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.careerXP.max = null;
+  }
+};
+
+const handleMOUMinChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.mou.min = null;
+  }
+};
+
+const handleMOUMaxChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.mou.max = null;
+  }
+};
+
+const handleCashDepositMinChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.cashDeposit.min = null;
+  }
+};
+
+const handleCashDepositMaxChange = (value: string | number | null) => {
+  if (value === '' || value === undefined) {
+    filters.value.cashDeposit.max = null;
+  }
+};
 
 const handleSortChange = () => {
   currentPage.value = 1;
@@ -833,12 +777,12 @@ const clearFilters = () => {
     location: null,
     chatRole: null,
     isBotUser: false,
-    statsGIR: [0, 100],
-    statsWinRatio: [0, 100],
-    careerLevel: [1, 100],
-    careerXP: [0, 1000000],
-    mou: [-200, 200],
-    cashDeposit: [0, 1000],
+    statsGIR: { min: null, max: null },
+    statsWinRatio: { min: null, max: null },
+    careerLevel: { min: null, max: null },
+    careerXP: { min: null, max: null },
+    mou: { min: null, max: null },
+    cashDeposit: { min: null, max: null },
     createTimeFrom: null,
     createTimeTo: null
   };
@@ -855,12 +799,12 @@ const clearAllFilters = () => {
     location: null,
     chatRole: null,
     isBotUser: false,
-    statsGIR: [0, 100],
-    statsWinRatio: [0, 100],
-    careerLevel: [1, 100],
-    careerXP: [0, 1000000],
-    mou: [-200, 200],
-    cashDeposit: [0, 1000],
+    statsGIR: { min: null, max: null },
+    statsWinRatio: { min: null, max: null },
+    careerLevel: { min: null, max: null },
+    careerXP: { min: null, max: null },
+    mou: { min: null, max: null },
+    cashDeposit: { min: null, max: null },
     createTimeFrom: null,
     createTimeTo: null
   };
@@ -886,12 +830,12 @@ const editPlayer = (player: Player) => {
 const handleEditPlayer = async (playerData: Partial<Player>) => {
   try {
     if (!selectedPlayer.value) return;
-    
+
     console.log('Saving player changes:', playerData);
-    
+
     // Only send fields that were actually changed from the original player data
     const changedFields: Partial<Player> = {};
-    
+
     Object.entries(playerData).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         const originalValue = (selectedPlayer.value as any)[key];
@@ -900,57 +844,57 @@ const handleEditPlayer = async (playerData: Partial<Player>) => {
         }
       }
     });
-    
+
     // Check if there are any actual changes
     if (Object.keys(changedFields).length === 0) {
       console.log('No changes detected');
       return;
     }
-    
+
     console.log('Fields that changed:', changedFields);
-    
+
     // Prepare the update data
     const updateData = {
       data: changedFields,
       reason: 'Player data update'
     };
-    
+
     // Call the API to update the player
     const response = await playersApi.updatePlayer(selectedPlayer.value.id, updateData);
-    
+
     if (response.success) {
       console.log('Player updated successfully:', response.data);
-      
+
       // Refresh the players list to show updated data
       await loadPlayers();
-      
+
       // Close the modal
       editPlayerModalOpen.value = false;
-      
+
       // Show success notification
       showSuccess('Player Updated', 'Player data has been updated successfully');
-          } else {
-        console.error('Failed to update player:', response.error);
-        // Use the error handler to show user-friendly error messages
-              if (response.error) {
+    } else {
+      console.error('Failed to update player:', response.error);
+      // Use the error handler to show user-friendly error messages
+      if (response.error) {
         console.log('Handling response error:', response.error);
         handleError(response.error, 'Update Player');
       }
-      }
-    } catch (error) {
-      console.error('Error updating player:', error);
-      // Handle error using the error handler
-      if (error && typeof error === 'object' && 'error' in error && error.error && 
-          typeof error.error === 'object' && 'status' in error.error && 'code' in error.error && 'message' in error.error) {
-        handleError(error.error as any, 'Update Player');
-      } else {
-        handleError({ 
-          status: 500, 
-          code: 'UNKNOWN_ERROR', 
-          message: 'An unexpected error occurred'
-        }, 'Update Player');
-      }
     }
+  } catch (error) {
+    console.error('Error updating player:', error);
+    // Handle error using the error handler
+    if (error && typeof error === 'object' && 'error' in error && error.error &&
+      typeof error.error === 'object' && 'status' in error.error && 'code' in error.error && 'message' in error.error) {
+      handleError(error.error as any, 'Update Player');
+    } else {
+      handleError({
+        status: 500,
+        code: 'UNKNOWN_ERROR',
+        message: 'An unexpected error occurred'
+      }, 'Update Player');
+    }
+  }
 };
 
 const formatDate = (dateString: string) => {
